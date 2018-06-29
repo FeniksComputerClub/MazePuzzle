@@ -139,6 +139,23 @@ char const* const Piece::s_type2str[4][Piece::side][4] =
             { u8"┃░░░┃", u8"│░░░│", u8"  ╳  ", u8"░░░░░" },
             { u8"┖───┚", u8"┕━━━┙", u8" ╱ ╲ ", u8"░░░░░" } } };
 
+enum dir_nt
+{
+  up,
+  right,
+  down,
+  left
+};
+
+class Move
+{
+ private:
+  bool m_move_pin;
+  int m_dir;
+ public:
+  Move(dir_nt dir, bool pin = false) : m_move_pin(pin), m_dir(dir) { }
+};
+
 class Game
 {
  private:
@@ -164,24 +181,45 @@ class Game
     m_pin_col = col;
   }
 
-  friend MultiLine& operator<<(MultiLine& ps, Game const& game)
+  void print_to(std::ostream& os) const;
+
+  void move(Move const& move);
+
+  friend std::ostream& operator<<(std::ostream& os, Game const& game)
   {
-    for (int row = 0; row < 3; ++row)
-    {
-      for (int col = 0; col < 3; ++col)
-        ps << game.m_board[row][col];
-      if (row < 2)
-        ps << std::endl;
-    }
-    return ps;
+    game.print_to(os);
+    return os;
   }
 };
 
+void Game::print_to(std::ostream& os) const
+{
+  MultiLine ps(os, Piece::side);
+  for (int row = 0; row < 3; ++row)
+  {
+    for (int col = 0; col < 3; ++col)
+      ps << m_board[row][col];
+    ps << std::endl;
+  }
+}
+
+void Game::move(Move const& move)
+{
+  if (move.m_move_pin)
+  {
+  }
+  else
+  {
+  }
+}
+
 int main()
 {
-  MultiLine ps(std::cout, Piece::side);
   Game game = { L0, L1, L2, M0, M1, T0, T1, B0, E };
   game.pin(0, 0);
 
-  ps << game << std::endl;
+  game.print_to(std::cout);
+  Move move(up);
+  game.move(move);
+  game.print_to(std::cout);
 }
