@@ -104,6 +104,11 @@ class Piece
     m_pin = p;
   }
 
+  bool is_hole() const
+  {
+    return m_type == 3 && m_rotation == 3;
+  }
+
   friend MultiLine& operator<<(MultiLine& ps, Piece const& piece)
   {
     ps.add([piece](std::ostream& os, int line)
@@ -151,9 +156,14 @@ class Move
 {
  private:
   bool m_move_pin;
-  int m_dir;
+  dir_nt m_dir;
+
  public:
   Move(dir_nt dir, bool pin = false) : m_move_pin(pin), m_dir(dir) { }
+
+  // Accessor.
+  bool move_pin() const { return m_move_pin; }
+  dir_nt dir() const { return m_dir; }
 };
 
 class Game
@@ -161,15 +171,24 @@ class Game
  private:
   int8_t m_pin_row;
   int8_t m_pin_col;
+  int8_t m_hole_row;
+  int8_t m_hole_col;
   std::array<std::array<Piece, 3>, 3> m_board;
 
  public:
-  Game(std::initializer_list<piece_st> init) : m_pin_row(-1), m_pin_col(-1)
+  Game(std::initializer_list<piece_st> init) : m_pin_row(-1), m_pin_col(-1), m_hole_row(-1), m_hole_col(-1)
   {
     std::initializer_list<piece_st>::iterator i = init.begin();
     for (int row = 0; row < 3; ++row)
       for (int col = 0; col < 3; ++col)
+      {
         m_board[row][col] = *i++;
+	if (m_board[row][col].is_hole())
+	{
+	  m_hole_row = row;
+	  m_hole_col = col;
+	}
+      }
   }
 
   void pin(int row, int col)
@@ -195,6 +214,7 @@ class Game
 void Game::print_to(std::ostream& os) const
 {
   MultiLine ps(os, Piece::side);
+  os << std::endl;
   for (int row = 0; row < 3; ++row)
   {
     for (int col = 0; col < 3; ++col)
@@ -205,11 +225,12 @@ void Game::print_to(std::ostream& os) const
 
 void Game::move(Move const& move)
 {
-  if (move.m_move_pin)
+  if (move.move_pin())
   {
   }
   else
   {
+
   }
 }
 
