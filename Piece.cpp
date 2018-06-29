@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <initializer_list>
+#include <cassert>
 
 class Piece;
 
@@ -70,6 +71,50 @@ class MultiLine
         m_ss[l] << ws;
     }
     return *this;
+  }
+};
+
+enum dir_nt
+{
+  up,
+  right,
+  down,
+  left
+};
+
+class Pos
+{
+ private:
+  int8_t m_row;
+  int8_t m_col;
+
+ public:
+  Pos() : m_row(-1), m_col(-1) { }
+  Pos(int row, int col) : m_row(row), m_col(col) { }
+  Pos& operator=(Pos const& pos) { m_row = pos.m_row; m_col = pos.m_col; return *this; }
+
+  bool is_valid() const { return m_row != -1; }
+  int8_t row() const { return m_row; }
+  int8_t col() const { return m_col; }
+
+  void step(dir_nt dir)
+  {
+    switch (dir)
+    {
+      case up:
+	--m_row;
+	break;
+      case right:
+	++m_col;
+	break;
+      case down:
+	++m_row;
+	break;
+      case left:
+	--m_col;
+	break;
+    }
+    assert(0 <= m_row && m_row <= 2 && 0 <= m_col && m_col <= 2);
   }
 };
 
@@ -144,14 +189,6 @@ char const* const Piece::s_type2str[4][Piece::side][4] =
             { u8"┃░░░┃", u8"│░░░│", u8"  ╳  ", u8"░░░░░" },
             { u8"┖───┚", u8"┕━━━┙", u8" ╱ ╲ ", u8"░░░░░" } } };
 
-enum dir_nt
-{
-  up,
-  right,
-  down,
-  left
-};
-
 class Move
 {
  private:
@@ -169,14 +206,12 @@ class Move
 class Game
 {
  private:
-  int8_t m_pin_row;
-  int8_t m_pin_col;
-  int8_t m_hole_row;
-  int8_t m_hole_col;
+  Pos m_pin;
+  Pos m_hole;
   std::array<std::array<Piece, 3>, 3> m_board;
 
  public:
-  Game(std::initializer_list<piece_st> init) : m_pin_row(-1), m_pin_col(-1), m_hole_row(-1), m_hole_col(-1)
+  Game(std::initializer_list<piece_st> init)
   {
     std::initializer_list<piece_st>::iterator i = init.begin();
     for (int row = 0; row < 3; ++row)
@@ -185,19 +220,17 @@ class Game
         m_board[row][col] = *i++;
 	if (m_board[row][col].is_hole())
 	{
-	  m_hole_row = row;
-	  m_hole_col = col;
+	  m_hole = Pos(row, col);
 	}
       }
   }
 
   void pin(int row, int col)
   {
-    if (m_pin_row != -1)
-      m_board[m_pin_row][m_pin_col].pin(false);
+    if (m_pin.is_valid())
+      m_board[m_pin.row()][m_pin.col()].pin(false);
     m_board[row][col].pin(true);
-    m_pin_row = row;
-    m_pin_col = col;
+    m_pin = Pos(row, col);
   }
 
   void print_to(std::ostream& os) const;
@@ -225,13 +258,14 @@ void Game::print_to(std::ostream& os) const
 
 void Game::move(Move const& move)
 {
-  if (move.move_pin())
-  {
-  }
+  Pos& pos(move.move_pin() ? m_pin : m_hole);
+  Pos piece(pos);
+  piece.step(move.dir());
+  if (!move.move_pin())
+    std::swap(m_board[pos.row()][pos.col()], m_board[piece.row()][piece.col()]);
   else
-  {
-
-  }
+    pin(piece.row(), piece.col());
+  pos = piece;
 }
 
 int main()
@@ -240,7 +274,7 @@ int main()
   game.pin(0, 0);
 
   game.print_to(std::cout);
-  Move move(up);
+  Move move(right, true);
   game.move(move);
   game.print_to(std::cout);
 }
