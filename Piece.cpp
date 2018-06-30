@@ -510,11 +510,11 @@ bool Game::add_new_boards(std::set<Game>& old_boards, std::list<Game>& new_board
 int main()
 {
   Game game = {
-    T0, M2, M1,
-    B0, L1, L1,
-    T3, L3, E
+    B0, L1, M2,
+    T3, L3, E,
+    L0, M0, B1
   };
-  game.pin(2, 0);
+  game.pin(1, 0);
 
   std::set<Game> all_boards;
   std::list<Game> new_boards;
