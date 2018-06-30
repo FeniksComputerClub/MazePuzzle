@@ -1,2 +1,2 @@
 puzzle: Piece.cpp
-	g++ -std=c++11 Piece.cpp -o puzzle
+	g++ -Wall -std=c++11 -g Piece.cpp -o puzzle
